@@ -17,30 +17,24 @@ class Admin extends User {
 		]);
 	}
 
-
 	public function user($id=NULL)
 	{
 		master_crud([
-			'table'=>'login',
-			'id'=>$id,
-			'select'=>[
-				'login_id',
-				'username',
-				'email',
-				'name',
-				'avatar',
-				'otp',
+			'table' => 'login',
+			'id' => $id,
+			'select' => [
+				'login_id', 'username',	'email', 'name', 'avatar', 'otp',
 			],
-			'filter'=>['role'=>'user'],
-			'validations'=>[
+			'filter' => ['role' => 'user'],
+			'validations' => [
 				['name', 'Name', 'required|alpha_numeric_spaces'],
 				['email', 'Email', 'required|valid_email'],
 				['username', 'Username', 'required|min_length[3]|alpha_numeric'],
 			],
-			'file_uploads'=>[
-				['name'=>'avatar', 'types'=>'jpg|jpeg|png|bmp']
+			'file_uploads' => [
+				['name' => 'avatar', 'types' => 'jpg|jpeg|png|bmp']
 			],
-			'after_update'=>function($id, $data, $is_created) {
+			'after_update' => function($id, $data, $is_created) {
 				// OTP Check
 				$otps = get_post_updates(['otp_invoke', 'otp_revoke']);
 				if (!empty($otps)) {

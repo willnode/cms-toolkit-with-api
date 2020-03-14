@@ -8,10 +8,13 @@ function issetor(&$var, $default = false) {
 }
 
 function set_cors_headers() {
-	header('Access-Control-Allow-Origin: '.get_instance()->config->item('front_url'));
-	header('Access-Control-Allow-Headers: X-Requested-With, Authorization');
-	header('Access-Control-Max-Age: 86400');
-	header('Vary: Origin');
+	$frontUrl =  get_instance()->config->item('front_url');
+	if ($frontUrl) {
+		header('Access-Control-Allow-Origin: '.$frontUrl);
+		header('Access-Control-Allow-Headers: X-Requested-With, Authorization');
+		header('Access-Control-Max-Age: 86400');
+		header('Vary: Origin');
+	}
 }
 
 /**
@@ -340,7 +343,7 @@ function redirect_back() {
  * To make it work for POST you
  * 		NEED: ['validations', 'file_uploads'],
  * 		OPTIONALLY: ['updatables', 'message_ok', 'filter']
- * 		FINETUNING: ['before_update', 'after_update']
+ * 		FINETUNING: ['before_update', 'after_update', 'default_values']
  */
 function master_crud($attr) {
 	// Two things only required: Table name and ID
@@ -390,8 +393,10 @@ function master_crud($attr) {
 					array_map(function($x){return is_string($x) ? $x : $x['name'];}, $file_uploads)
 				)
 			);
+			get_instance()->db->where($filter);
 			$ok AND ($existing = get_values_at($table, $id, '', $field_key));
 			$message_ok = isset($attr['message_ok']) ? $attr['message_ok'] : "Successfully Saved";
+			$default_values = isset($attr['default_values']) ? $attr['default_values'] : $filter;
 			$before_update = isset($attr['before_update']) ? $attr['before_update'] : NULL;
 			$after_update = isset($attr['after_update']) ? $attr['after_update'] : NULL;
 			$ok = TRUE;

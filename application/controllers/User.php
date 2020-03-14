@@ -22,12 +22,7 @@ class User extends CI_Basic_Api_Controller {
 			'table'=>'login',
 			'id'=>$this->login->login_id,
 			'select'=>[
-				'login_id',
-				'username',
-				'email',
-				'name',
-				'avatar',
-				'role'
+				'login_id', 'username',	'email', 'name', 'avatar', 'role',
 			],
 			'validations'=>[
 				['name', 'Name', 'required|alpha_numeric_spaces'],

@@ -11,7 +11,8 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 |
 | 		https://example.com
 |
-| If you feel dumb, just use asterisk "*"
+| If you feel dumb, just use asterisk "*" (Not Recommended).
+| Setting this to NULL will disable CORS headers from being sent
 |
 */
 

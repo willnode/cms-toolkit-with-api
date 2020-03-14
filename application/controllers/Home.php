@@ -25,7 +25,7 @@ class Home extends CI_Basic_Api_Controller {
 				'login'=>$this->login
 			]);
 		} else {
-			load_401('Wrong Authentication', static::ROLE ?: 'guest');
+			load_401('Wrong Authentication', 'guest');
 		}
 	}
 

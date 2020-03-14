@@ -27,12 +27,8 @@ class CI_Basic_Api_Controller extends CI_Controller {
 
 			// return only the headers and not the content
 			exit;
-
 		}
 
-		// PHP HTTP_AUTHENTICATION Workaround
-		// if (isset($_SERVER['HTTP_AUTHENTICATION']))
-		// 	list($_SERVER['PHP_AUTH_USER'], $_SERVER['PHP_AUTH_PW']) = explode(':' , base64_decode(substr($_SERVER['HTTP_AUTHENTICATION'], 6)));
 		// Get authentication
 		if (isset($_SERVER['PHP_AUTH_USER'])) {
 			$username = $_SERVER['PHP_AUTH_USER'];
@@ -46,11 +42,10 @@ class CI_Basic_Api_Controller extends CI_Controller {
 			}
 		}
 
-
 		// Role Room Precheck
 		if (static::ROLE) {
 			if (empty($this->login) OR $this->login->role !== static::ROLE) {
-				load_401('Wrong Authentication', static::ROLE ?: 'guest');
+				load_401('Wrong Authentication', static::ROLE);
 			}
 		}
 	}
