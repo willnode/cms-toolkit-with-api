@@ -12,6 +12,7 @@ function set_cors_headers() {
 	if ($frontUrl) {
 		header('Access-Control-Allow-Origin: '.$frontUrl);
 		header('Access-Control-Allow-Headers: X-Requested-With, Authorization');
+		header('Access-Control-Allow-Methods: GET, PUT, POST, DELETE');
 		header('Access-Control-Max-Age: 86400');
 		header('Vary: Origin');
 	}
@@ -390,17 +391,17 @@ function master_crud($attr) {
 				// Auto infer from validations + file_uploads
 				array_merge(
 					array_map(function($x){return $x[0];}, $validations),
-					array_map(function($x){return is_string($x) ? $x : $x['name'];}, $file_uploads)
+					array_map(function($x){return is_string($x) ? $x : $x['name'];}, $files)
 				)
 			);
 			get_instance()->db->where($filter);
-			$ok AND ($existing = get_values_at($table, $id, '', $field_key));
+			$existing = get_values_at($table, $id, '', $field_key);
 			$message_ok = isset($attr['message_ok']) ? $attr['message_ok'] : "Successfully Saved";
 			$default_values = isset($attr['default_values']) ? $attr['default_values'] : $filter;
 			$before_update = isset($attr['before_update']) ? $attr['before_update'] : NULL;
 			$after_update = isset($attr['after_update']) ? $attr['after_update'] : NULL;
-			$ok = TRUE;
 			$row_create_flag = $row_id === 0;
+			$ok = TRUE;
 			$ok AND ($ok = run_validation($validations));
 			$ok AND ($data = get_post_updates($updatables));
 			foreach ($files as $file) {
