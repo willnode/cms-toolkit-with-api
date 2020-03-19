@@ -39,7 +39,7 @@ class User extends CI_Basic_Api_Controller {
 						[$password, 'Password', 'required'],
 						['passconf', 'Password Confirmation', "matches[$password]"]
 					])) {
-						$data = get_post_updates([$password]);
+						$data[$password] = $_POST[$password];
 						if(control_password_update($data, $password)) {
 							$data['otp'] = NULL;
 						}

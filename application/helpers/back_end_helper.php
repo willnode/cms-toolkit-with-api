@@ -26,12 +26,19 @@ function run_validation($config = []) {
 	if ($_SERVER['REQUEST_METHOD'] !== 'POST') load_error('Action require POST method');
 	$ci->load->library('form_validation');
 	foreach ($config as $conf) {
-		$ci->form_validation->set_rules($conf[0], $conf[1], $conf[2]);
+		if (count($conf) >= 3 AND $conf[2]) {
+			$ci->form_validation->set_rules($conf[0], $conf[1], $conf[2]);
+		}
 	}
 	if ( $ci->form_validation->run()) {
 		return true;
 	}
-	load_error($ci->form_validation->error_array());
+	load_json([
+		'status'=>'Error',
+		'message' => $ci->form_validation->error_string(' ', ' '),
+		'validations'=>$ci->form_validation->error_array()
+	]);
+	exit;
 }
 
 /**
@@ -62,7 +69,7 @@ function control_file_delete($folder, $existing_value = '')
 /**
  * Handle file upload on POST, and also delete existing file in previous data (so no orphan files)
  */
-function control_file_upload(&$updates, $name, $folder, $existing_row = NULL, $types = '*', $required = FALSE)
+function control_file_upload(&$updates, $name, $folder, $existing_row = NULL, $types = '*', $required = FALSE, $custom_file_name = NULL)
 {
 	$ci = &get_instance();
     if (isset($_FILES[$name]) AND is_uploaded_file($_FILES[$name]['tmp_name'])) {
@@ -71,8 +78,9 @@ function control_file_upload(&$updates, $name, $folder, $existing_row = NULL, $t
 		}
         $ci->upload->initialize([
             'upload_path' => "./uploads/$folder/",
-            'allowed_types' => $types
-        ]);
+			'allowed_types' => $types,
+			'file_name' => !empty($custom_file_name) ? $custom_file_name : NULL,
+		]);
         if ($ci->upload->do_upload($name)) {
 			$updates[$name] = $ci->upload->file_name;
 			if (!empty($existing_row->{$name}))
@@ -335,6 +343,7 @@ function redirect_back() {
 		redirect('/');
 }
 
+
 /**
  * The Master CRUD is heavily opinionated yet configurable REST logic covers most CRUD needs
  * To make it work for GET you
@@ -344,7 +353,7 @@ function redirect_back() {
  * To make it work for POST you
  * 		NEED: ['validations', 'file_uploads'],
  * 		OPTIONALLY: ['updatables', 'message_ok', 'filter']
- * 		FINETUNING: ['before_update', 'after_update', 'default_values']
+ * 		FINETUNING: ['before_update', 'after_update']
  */
 function master_crud($attr) {
 	// Two things only required: Table name and ID
@@ -395,22 +404,23 @@ function master_crud($attr) {
 				)
 			);
 			get_instance()->db->where($filter);
-			$existing = get_values_at($table, $id, '', $field_key);
 			$message_ok = isset($attr['message_ok']) ? $attr['message_ok'] : "Successfully Saved";
+			$existing = get_values_at($table, $row_id, '', $field_key);
 			$default_values = isset($attr['default_values']) ? $attr['default_values'] : $filter;
 			$before_update = isset($attr['before_update']) ? $attr['before_update'] : NULL;
 			$after_update = isset($attr['after_update']) ? $attr['after_update'] : NULL;
 			$row_create_flag = $row_id === 0;
 			$ok = TRUE;
 			$ok AND ($ok = run_validation($validations));
-			$ok AND ($data = get_post_updates($updatables));
+			$ok AND ($data = get_post_updates($updatables, $default_values));
 			foreach ($files as $file) {
 				if ($ok) {
 					$file_name = is_string($file) ? $file : $file['name'];
 					$file_folder = isset($file['folder']) ? $file['folder'] : $file_name;
 					$file_types = isset($file['types']) ? $file['types'] : '*';
 					$file_required = isset($file['required']) ? $file['required'] : FALSE;
-					$ok = control_file_upload($data, $file_name, $file_folder, $existing, $file_types, $file_required);
+					$file_custom_name = (isset($file['custom_filename']) AND is_callable($file['custom_filename']) AND isset($_FILES[$file_name]['name'])) ? $file['custom_filename']($row_id, $_FILES[$file_name]['name'], $existing) : NULL;
+					$ok = control_file_upload($data, $file_name, $file_folder, $existing, $file_types, $file_required, $file_custom_name);
 				}
 			}
 			$ok AND is_callable($before_update) AND ($ok = $before_update($row_id, $data, $existing));
