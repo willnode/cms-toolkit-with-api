@@ -1,12 +1,5 @@
 <?php
 
-/**
- * http://cwestblog.com/2015/11/06/php-problem-with-issetor/
- */
-function issetor(&$var, $default = false) {
-    return isset($var) ? $var : $default;
-}
-
 function set_cors_headers() {
 	$frontUrl =  get_instance()->config->item('front_url');
 	if ($frontUrl) {
@@ -23,7 +16,7 @@ function set_cors_headers() {
  */
 function run_validation($config = []) {
 	$ci = &get_instance();
-	if ($_SERVER['REQUEST_METHOD'] !== 'POST') load_error('Action require POST method');
+	if (REQUEST_METHOD !== POST) load_error('Action require POST method');
 	$ci->load->library('form_validation');
 	foreach ($config as $conf) {
 		if (count($conf) >= 3 AND $conf[2]) {
@@ -112,29 +105,6 @@ function control_password_update(&$updates, $field = 'password') {
 }
 
 /**
- * Show error message to front-end
- */
-function set_error($str) {
-	if (!empty($str)) {
-		load_error($str);
-   		//get_instance()->session->set_flashdata('error', );
-		return TRUE;
-	}
-	return FALSE;
-}
-
-/**
- * Show info message to front-end
- */
-function set_message($str) {
-	if (!empty($str)) {
-		get_instance()->session->set_flashdata('message', $str);
-		return TRUE;
-	}
-	return FALSE;
-}
-
-/**
  * Allow custom DB error handling
  */
 function catch_db_error() {
@@ -146,7 +116,10 @@ function catch_db_error() {
  * Check if last DB query throws some error
  */
 function check_db_error() {
-	return set_error(get_instance()->db->error()['message']);
+	if (!empty(get_instance()->db->error()['message'])) {
+		load_error(get_instance()->db->error()['message']);
+	}
+	return FALSE;
 }
 
 function get_default_values($table, $field_key = NULL, $select = '*') {
@@ -196,20 +169,6 @@ function insert_or_update($table, &$data, &$id, $id_column = NULL) {
 		}
 	}
 	return TRUE;
-}
-
-/**
- * Check loggen-on user role are match, or show login page or 401 error
- */
-function check_role($role) {
-	$ci = &get_instance();
-	if ($ci->session->role === $role) {
-		return TRUE;
-	} elseif ($ci->session->login_id === NULL) {
-		redirect_to_login();
-	} else {
-		redirect($ci->session->role);
-	}
 }
 
 /**
@@ -295,15 +254,6 @@ function load_error($message) {
 
 
 /**
- * For inherited table profile, we need to get ID login from ID of specific user role
- */
-function get_id_login($table, $id_in_table) {
-	$ci = &get_instance();
-	return $ci->db->get_where($table, [$table."_id" => $id_in_table])->row()->login_id;
-}
-
-
-/**
  * The Generic Database Model that's fully compatible with Bootstrap-Table AJAX
  */
 function ajax_table_driver($table, $filter = [], $searchable_columns = [], $select = '*') {
@@ -336,14 +286,6 @@ function ajax_table_driver($table, $filter = [], $searchable_columns = [], $sele
 }
 
 
-function redirect_back() {
-	if (!empty($_SERVER['HTTP_REFERER']))
-		redirect($_SERVER['HTTP_REFERER']);
-	else
-		redirect('/');
-}
-
-
 /**
  * The Master CRUD is heavily opinionated yet configurable REST logic covers most CRUD needs
  * To make it work for GET you
@@ -360,7 +302,7 @@ function master_crud($attr) {
 	$table = $attr['table'];
 	$row_id = $attr['id'];
 	$field_key = isset($attr['field_key']) ? $attr['field_key'] : $table.'_id';
-	$method =  isset($attr['method']) ? $attr['method'] : $_SERVER['REQUEST_METHOD'];
+	$method =  isset($attr['method']) ? $attr['method'] : REQUEST_METHOD;
 	$select = isset($attr['select']) ? $attr['select'] : '*';
 	$filter = isset($attr['filter']) ? $attr['filter'] : [];
 	if ($row_id === NULL) {

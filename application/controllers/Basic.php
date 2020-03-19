@@ -23,7 +23,7 @@ class CI_Basic_Api_Controller extends CI_Controller {
 		set_cors_headers();
 
 		// respond to preflights
-		if ($_SERVER['REQUEST_METHOD'] == OPTIONS) {
+		if (REQUEST_METHOD == OPTIONS) {
 
 			// return only the headers and not the content
 			exit;
