@@ -39,7 +39,7 @@ class Admin extends User {
 				$otps = get_post_updates(['otp_invoke', 'otp_revoke']);
 				if (!empty($otps)) {
 					if (isset($otps['otp_invoke'])) {
-						$otp = (version_compare(PHP_VERSION, '7.0.0') >= 0 ? 'random_int' : 'mt_rand')(111111, 999999);
+						$otp = generate_pin();
 					} else if (isset($otps['otp_revoke'])) {
 						$otp = NULL;
 					}

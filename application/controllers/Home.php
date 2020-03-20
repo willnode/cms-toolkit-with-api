@@ -29,6 +29,37 @@ class Home extends CI_Basic_Api_Controller {
 		}
 	}
 
+	public function forgot()
+	{
+		if (REQUEST_METHOD === POST) {
+			if (run_validation([
+				['email', 'Email', 'required|valid_email'],
+			])) {
+				$login = get_values_at('login', $_POST['email'], 'load_404', 'email');
+				if (empty($_POST['pin'])) {
+					$otp = generate_pin();
+					get_instance()->db->update('login', ['otp' => $otp], ['login_id' => $login->login_id]);
+					// TODO: Send email to reset page
+					load_ok('PIN has been generated');
+				} else {
+					if ($login->otp !== $_POST['pin']) {
+						load_404('PIN is incorrect');
+					}
+					else if (empty($_POST['password'])) {
+						load_ok('PIN is correct');
+					}
+					else {
+						$data = get_post_updates(['password'], ['otp' => null]);
+						control_password_update($data);
+						get_instance()->db->update('login', $data, ['login_id' => $login->login_id]);
+						load_ok('Password updated');
+					}
+				}
+			}
+		}
+		load_405();
+	}
+
 	public function load_404()
 	{
 		load_404();

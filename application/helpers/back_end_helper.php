@@ -1,5 +1,9 @@
 <?php
 
+function generate_pin () {
+	return (version_compare(PHP_VERSION, '7.0.0') >= 0 ? 'random_int' : 'mt_rand')(111111, 999999);
+}
+
 function set_cors_headers() {
 	$frontUrl =  get_instance()->config->item('front_url');
 	if ($frontUrl) {
@@ -250,6 +254,33 @@ function load_error($message) {
 		'message' => $message
 	]);
 	exit;
+}
+
+/**
+ * The general setup to send email with single call
+ */
+
+function send_email_for_real($attr) {
+	$scheme = isset($attr['scheme']) ? $attr['scheme'] : 'default';
+	// required attributes
+	$from = $attr['from'];
+	$sender = $attr['sender'];
+	$to = $attr['to'];
+	$subject = $attr['subject'];
+	$body = $attr['body'];
+
+	// Action
+	$this->load->config('email');
+	$this->load->library('email', $config['email'][$scheme]);
+	$this->email->from($from, $sender);
+	$this->email->to($to);
+	$this->email->subject($subject);
+	$this->email->message($body);
+	if($this->email->send()) {
+		return TRUE;
+	} else {
+		load_error($this->email->print_debugger());
+	}
 }
 
 
