@@ -8,10 +8,9 @@ function set_cors_headers() {
 	$frontUrl =  get_instance()->config->item('front_url');
 	if ($frontUrl) {
 		header('Access-Control-Allow-Origin: '.$frontUrl);
-		header('Access-Control-Allow-Headers: X-Requested-With, Authorization');
-		header('Access-Control-Allow-Methods: GET, PUT, POST, DELETE');
+		header('Access-Control-Allow-Headers: X-Requested-With, Authorization, Content-Type');
+		header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE');
 		header('Access-Control-Max-Age: 86400');
-		header('Vary: Origin');
 	}
 }
 
@@ -19,8 +18,9 @@ function set_cors_headers() {
  * CodeIgniter Form validation for short, dirty, quick config
  */
 function run_validation($config = []) {
-	$ci = &get_instance();
+	if (count($config) === 0) return true;
 	if (REQUEST_METHOD !== POST) load_error('Action require POST method');
+	$ci = &get_instance();
 	$ci->load->library('form_validation');
 	foreach ($config as $conf) {
 		if (count($conf) >= 3 AND $conf[2]) {
@@ -376,7 +376,12 @@ function master_crud($attr) {
 					array_map(function($x){return is_string($x) ? $x : $x['name'];}, $files)
 				)
 			);
-			get_instance()->db->where($filter);
+
+			// WONT ENABLE UNLESS JOIN ON UPDATE WORKS!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+			// LOOKING FOR CI 4 UPGRADE!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+			// SECURITY ISSUE ON INSUFFICIENT ACCESS RESTRICTION GUARANTEED!!!!!!!!!!!!!!!
+			// isset($attr['joins']) AND is_callable($attr['joins']) AND $attr['joins']();
+			// get_instance()->db->where($filter);
 			$message_ok = isset($attr['message_ok']) ? $attr['message_ok'] : "Successfully Saved";
 			$existing = get_values_at($table, $row_id, '', $field_key);
 			$default_values = isset($attr['default_values']) ? $attr['default_values'] : $filter;
@@ -396,14 +401,21 @@ function master_crud($attr) {
 					$ok = control_file_upload($data, $file_name, $file_folder, $existing, $file_types, $file_required, $file_custom_name);
 				}
 			}
-			$ok AND is_callable($before_update) AND ($ok = $before_update($row_id, $data, $existing));
+			$ok AND is_callable($before_update) AND ($before_update($row_id, $data, $existing));
 			$ok AND insert_or_update($table, $data, $row_id, $field_key);
-			$ok AND is_callable($after_update) AND ($ok = $after_update($row_id, $data, $row_create_flag));
-			$ok AND load_ok(['message' => $message_ok ]);
+			$ok AND is_callable($after_update) AND ($after_update($row_id, $data, $row_create_flag));
+			$ok AND load_ok(['message' => $message_ok, 'row_id' => $row_id ]);
 			load_error('Unknown error');
 		} else if ($method === DELETE) {
-			if ($this->db->delete($table, [$field_key => $row_id])) {
-				load_ok('Deleted successfully');
+
+			// WONT ENABLE UNLESS JOIN ON DELETE WORKS!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+			// LOOKING FOR CI 4 UPGRADE!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+			// SECURITY ISSUE ON INSUFFICIENT ACCESS RESTRICTION GUARANTEED!!!!!!!!!!!!!!!
+
+			// isset($attr['joins']) AND is_callable($attr['joins']) AND $attr['joins']();
+			// get_instance()->db->where($filter);
+			if (get_instance()->db->delete($table, [$field_key => $row_id])) {
+				load_ok(['message' => 'Deleted successfully']);
 			} else {
 				load_404();
 			}

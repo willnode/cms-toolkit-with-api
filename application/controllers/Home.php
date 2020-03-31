@@ -1,7 +1,7 @@
 <?php
 defined('BASEPATH') OR exit('No direct script access allowed');
 
-require 'Basic.php';
+require_once 'Basic.php';
 
 class Home extends CI_Basic_Api_Controller {
 
